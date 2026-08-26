@@ -1,0 +1,6 @@
+name: hal_nsing
+build:
+  cmake-ext: True
+  kconfig-ext: True
+  settings:
+    dts_root: .
