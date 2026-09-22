@@ -9,3 +9,6 @@ __pycache__
 
 # binary blobs fetched by `west blobs fetch`
 /zephyr/blobs/
+
+# upstream keeps n32xx_tsc_alg_api.lib inside a header directory; belt and braces
+*.lib
