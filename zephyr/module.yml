@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Nsing Technologies Inc.
+# SPDX-License-Identifier: BSD-3-Clause
+
 name: hal_nsing
 build:
   cmake-ext: True

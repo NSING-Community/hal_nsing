@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2026, NSING-Community
+# SPDX-FileCopyrightText: 2026 Nsing Technologies Inc.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 """Mirror one Nsing MCU series from an upstream SDK checkout into this module.
@@ -11,15 +11,18 @@ Every Nsing SDK is laid out the same way::
     |-- CMSIS/
     |   |-- core/                  not mirrored (Zephyr's cmsis module provides it)
     |   `-- device/
-    |       |-- <dev>.h            -> <series>/cmsis/device/<series>/include/
-    |       |-- <dev>_conf.h       -> <series>/cmsis/device/<series>/include/
+    |       |-- <dev>.h            -> <series>/CMSIS/device/
+    |       |-- <dev>_conf.h       -> <series>/CMSIS/device/
     |       |-- <dev>_flash.ld     not mirrored (lives in the Zephyr tree, soc/)
     |       |-- startup/           not mirrored (Zephyr builds its own vector table)
-    |       |-- system_<dev>.h     -> <series>/cmsis/device/<series>/include/
-    |       `-- system_<dev>.c     -> <series>/cmsis/device/<series>/source/
+    |       |-- system_<dev>.c     -> <series>/CMSIS/device/
+    |       `-- system_<dev>.h     -> <series>/CMSIS/device/
     `-- <dev>_std_periph_driver/
-        |-- inc/*.h                -> <series>/std_periph/include/
-        `-- src/*.c                -> <series>/std_periph/source/
+        |-- inc/*.h                -> <series>/<dev>_std_periph_driver/inc/
+        `-- src/*.c                -> <series>/<dev>_std_periph_driver/src/
+
+Destinations keep upstream's own directory names, so a refresh is a directory
+copy rather than a remapping.
 
 ``<dev>`` is the device prefix and normally equals ``<series>``. Pass
 ``--device-prefix`` for the exceptions, e.g. N32M016FocRL ships
@@ -73,19 +76,17 @@ def build_plan(series: str, dev: str, firmware: Path):
         if not required.is_dir():
             sys.exit(f"error: {required} is not a directory")
 
-    cmsis_inc = f"{series}/cmsis/device/{series}/include"
-    cmsis_src = f"{series}/cmsis/device/{series}/source"
-    std_inc = f"{series}/std_periph/include"
-    std_src = f"{series}/std_periph/source"
+    cmsis_dest = f"{series}/CMSIS/device"
+    std_dest = f"{series}/{dev}_std_periph_driver"
 
     entries: list[tuple[Path, str]] = []
     notes: list[str] = []
 
     wanted = {
-        f"{dev}.h": cmsis_inc,
-        f"{dev}_conf.h": cmsis_inc,
-        f"system_{dev}.h": cmsis_inc,
-        f"system_{dev}.c": cmsis_src,
+        f"{dev}.h": cmsis_dest,
+        f"{dev}_conf.h": cmsis_dest,
+        f"system_{dev}.h": cmsis_dest,
+        f"system_{dev}.c": cmsis_dest,
     }
     for name, dest in sorted(wanted.items()):
         path = cmsis / name
@@ -102,7 +103,7 @@ def build_plan(series: str, dev: str, firmware: Path):
         elif path.name not in wanted:
             notes.append(f"not mirrored: CMSIS/device/{path.name}")
 
-    for sub, dest in (("inc", std_inc), ("src", std_src)):
+    for sub in ("inc", "src"):
         directory = std / sub
         if not directory.is_dir():
             notes.append(f"missing upstream, skipped: {std.name}/{sub}/")
@@ -116,7 +117,7 @@ def build_plan(series: str, dev: str, firmware: Path):
             elif path.stem in blobs:
                 notes.append(f"blob companion dropped: {std.name}/{sub}/{path.name}")
             elif path.suffix in (".h", ".c"):
-                entries.append((path, f"{dest}/{path.name}"))
+                entries.append((path, f"{std_dest}/{sub}/{path.name}"))
             else:
                 notes.append(f"not mirrored: {std.name}/{sub}/{path.name}")
 

@@ -1,47 +1,51 @@
-# hal_nsing
+# Introduction
 
-Standard driver libraries for Nations Nsing MCUs, packaged as a Zephyr module.
+The **hal_nsing** is a set of standard firmware libraries and ARM CMSIS configurations for
+Nsing N32 MCUs. The HAL is organized following the directory structure detailed below.
 
-## Supported series
+## Directory Structure
 
-| Directory  | Core       | Upstream SDK                                                          |
-| ---------- | ---------- | --------------------------------------------------------------------- |
-| `n32g45x/` | Cortex-M4  | [`Nsing-Community/N32G45x-SDK`](https://github.com/Nsing-Community/N32G45x-SDK) |
+The directory is composed of three parts:
 
-Further series are added as sibling directories — see [Adding a series](#adding-a-series).
+ - SoC specific libraries.
+ - ZephyrRTOS module directory (`zephyr`).
+ - This README file.
 
-## Repository structure
+On top of those sit the files that describe the repository itself: `LICENSE`, `LICENSES/`,
+`REUSE.toml`, `.gitattributes` and `scripts/sync_series.py`.
 
 ```
 .
-├── n32g45x/                 one directory per series, named after the lowercase SoC series
-│   ├── README.md            upstream origin, SDK version, what was and was not mirrored
-│   ├── cmsis/device/n32g45x/
-│   └── std_periph/
-├── scripts/sync_series.py   mirror or verify one series against its upstream SDK
-├── zephyr/module.yml        Zephyr module definition
+├── n32g45x/                     one directory per series, named after the lowercase SoC series
+│   ├── README.md                upstream origin, SDK version, what was and was not mirrored
+│   ├── CMSIS/device/            <series>.h, <series>_conf.h, system_<series>.{c,h}
+│   └── <series>_std_periph_driver/{inc,src}/
+├── LICENSES/BSD-3-Clause.txt    license text, in the REUSE layout
+├── REUSE.toml                   per-path licensing; vendored sources are declared, never edited
+├── scripts/sync_series.py       mirror or verify one series against its upstream SDK
+├── zephyr/module.yml            Zephyr module definition
+├── .gitattributes               pins LF endings for every tracked file
+├── .gitignore
 └── LICENSE
 ```
 
-## Per-series layout
+### Per-series layout
 
-Every series directory has the same shape, and mirrors the upstream SDK paths so that a
-refresh is a file-for-file copy:
+Each N32 firmware library is organized in the following structure:
 
 ```
 <series>/
 ├── README.md
-├── cmsis/device/<series>/
-│   ├── include/             <series>.h, <series>_conf.h, system_<series>.h
-│   └── source/              system_<series>.c
-└── std_periph/
-    ├── include/             <series>_std_periph_driver/inc/
-    └── source/              <series>_std_periph_driver/src/
+├── CMSIS/device/            <series>.h, <series>_conf.h, system_<series>.{c,h}
+└── <series>_std_periph_driver/
+    ├── inc/                 headers
+    └── src/                 sources
 ```
 
-CMSIS core headers, startup files and linker scripts are **not** part of this module. Zephyr's
-`cmsis` module provides the core headers, the vector table is built from devicetree, and linker
-scripts live in the Zephyr tree under `soc/`.
+Upstream's own directory names are kept, so a refresh is a directory copy rather than a
+remapping. The only thing missing from upstream's `CMSIS/device/` is `startup/` and
+`<series>_flash.ld`: CMSIS core headers come from Zephyr's own `cmsis` module, the vector table
+is built from devicetree, and linker scripts live in the Zephyr tree under `soc/`.
 
 ## Build integration
 
@@ -57,12 +61,49 @@ set(nsing_soc_dir ${ZEPHYR_HAL_NSING_MODULE_DIR}/${CONFIG_SOC_SERIES})
 
 which is why a series directory **must** be named exactly after the lowercase SoC series.
 
+## Supported series
+
+| Directory  | Core       | Upstream SDK                                                          |
+| ---------- | ---------- | --------------------------------------------------------------------- |
+| `n32g45x/` | Cortex-M4  | [`Nsing-Community/N32G45x-SDK`](https://github.com/Nsing-Community/N32G45x-SDK) |
+
+Further series are added as sibling directories, named after the lowercase `CONFIG_SOC_SERIES` —
+see [Adding a series](#adding-a-series).
+
+# How to submit code
+
+ - **Land the newest firmware library version.** The vendor's SDK package is the source of
+   truth here, not the git copy it is fetched from: Nations publishes no git repository, so the
+   SDK copies on GitHub are community mirrors. The package a series was taken from is recorded
+   in the series' README — check a mirror against it before trusting it.
+
+ - **The vendored sources are never edited.** They are a byte-for-byte mirror of the upstream
+   SDK, and editing them would break the invariant `scripts/sync_series.py --check` relies on.
+   Their licensing is declared in `REUSE.toml` instead of written into the files. See
+   [License](#license).
+
+ - **Changes are submitted with Linux LF endings.** `.gitattributes` pins `* text=auto eol=lf`
+   so the working tree is byte-identical to the committed blobs on every platform, and
+   `sync_series.py` normalises on write whatever the SDK ships. There is no need to run
+   `dos2unix` by hand.
+
+ - **Directory names keep upstream's spelling.** That includes the capital `CMSIS`. This
+   deliberately departs from the lowercase convention `hal_gigadevice` follows: keeping
+   upstream's own names is what makes refreshing a series a directory copy rather than a
+   remapping. Exceptions should be discussed at review phase.
+
+ - **A series directory is named after the lowercase `CONFIG_SOC_SERIES`.** This one *is* a
+   hard rule — the build glue derives every path from
+   `${ZEPHYR_HAL_NSING_MODULE_DIR}/${CONFIG_SOC_SERIES}`.
+
+ - **`python scripts/sync_series.py --check` reports no drift** for every series.
+
+ - **`reuse lint` reports no missing licenses.** A new series needs its own entry in
+   `REUSE.toml`; the globs there are written per series and are not covered automatically.
+
 ## Adding a series
 
-1. Check the series against the [known-series table](#known-series) below — a few entries there
-   are variants rather than series of their own.
-
-2. Clone its SDK and mirror it:
+1. Clone its SDK and mirror it:
 
    ```sh
    git clone https://github.com/Nsing-Community/N32G43x-SDK
@@ -71,83 +112,58 @@ which is why a series directory **must** be named exactly after the lowercase So
 
    The script copies only the files a HAL needs, writes them with LF endings, and reports
    everything it deliberately left behind. Re-run it with `--check` at any time to see whether
-   the tree has drifted from upstream.
+   the tree has drifted from upstream. Pass `--device-prefix` when the SDK's device prefix
+   differs from the series name.
 
-3. Add `n32g43x/README.md`, using `n32g45x/README.md` as the template, recording the upstream
+2. Add `n32g43x/README.md`, using `n32g45x/README.md` as the template, recording the upstream
    repository, the SDK package version and any exclusions specific to that series.
 
-4. Add the series to [Supported series](#supported-series) above.
+3. Add the series to [Supported series](#supported-series) above.
+
+4. Add the series to `REUSE.toml`, under the vendored-sources annotation.
 
 5. Extend `modules/hal_nsing/CMakeLists.txt` and `Kconfig` in the Zephyr tree with the new
    series' peripheral sources, then commit with `git commit -s`.
 
-### Things that vary between series
+6. Run `reuse lint` and make sure it still reports 0 missing licenses.
 
-* **The peripheral library directory name is uniform.** All 21 Nsing SDKs use
-  `<lowercase series>_std_periph_driver`, so `sync_series.py` can find it without a mapping
-  table.
-* **Extra libraries are optional.** `<series>_algo_lib` (present for 11 of the 21 series),
-  `<series>_usbfs_driver` / `_usbfsd_driver` / `_usbhs_driver`, `<series>_periph_lib` and
-  `<series>_ble_driver` exist for some series only. Add them as separate directories when they
-  are actually wired into a build, not speculatively.
-* **Some series keep a blob inside a header directory.** Upstream ships
-  `n32xx_tsc_alg_api.lib` next to the other headers in `.../std_periph_driver/inc/` for N32G45x,
-  N32G4FR and N32WB452. `sync_series.py` drops every `*.lib` along with the header of the same
-  stem, so such a file can never be committed by accident.
+## Exceptions
 
-### Known series
+ - **A precompiled blob sits inside a header directory.** Upstream ships
+   `n32xx_tsc_alg_api.lib` next to the other headers in `.../std_periph_driver/inc/` for
+   N32G45x, N32G4FR and N32WB452. Any glob or whole-directory copy of that directory would
+   quietly commit 3.2 MB of precompiled code. `sync_series.py` drops every `*.lib` along with
+   the header of the same stem, which is what removes both files.
 
-Not all of these are supported yet; the table exists so that a new series can be sized up
-before any work starts.
+ - **Extra libraries are optional.** `<series>_algo_lib`, `<series>_usbfs_driver` /
+   `_usbfsd_driver` / `_usbhs_driver`, `<series>_periph_lib` and `<series>_ble_driver` exist
+   for some series only. Add them as separate directories when they are actually wired into a
+   build, not speculatively. Note that `<series>_algo_lib/lib/` holds five prebuilt libraries
+   of its own (`aes`, `algo_common`, `des`, `hash`, `rng` for N32G45x), which are out of
+   scope until a `blobs:` entry exists for them.
 
-| Series        | Core               | SDK repository                                                              |
-| ------------- | ------------------ | --------------------------------------------------------------------------- |
-| `n32g45x`     | Cortex-M4          | [N32G45x-SDK](https://github.com/Nsing-Community/N32G45x-SDK) *(supported)* |
-| `n32g43x`     | Cortex-M4          | [N32G43x-SDK](https://github.com/Nsing-Community/N32G43x-SDK)               |
-| `n32g41x`     | Cortex-M4          | [N32G41x-SDK](https://github.com/Nsing-Community/N32G41x-SDK)               |
-| `n32g4fr`     | Cortex-M4          | [N32G4FR-SDK](https://github.com/Nsing-Community/N32G4FR-SDK)               |
-| `n32g430`     | Cortex-M4          | [N32G430-SDK](https://github.com/Nsing-Community/N32G430-SDK)               |
-| `n32g401`     | Cortex-M4          | [N32G401-SDK](https://github.com/Nsing-Community/N32G401-SDK)               |
-| `n32g05x`     | Cortex-M0          | [N32G05x-SDK](https://github.com/Nsing-Community/N32G05x-SDK)               |
-| `n32g033`     | Cortex-M0          | [N32G033-SDK](https://github.com/Nsing-Community/N32G033-SDK)               |
-| `n32g032`     | Cortex-M0          | [N32G032-SDK](https://github.com/Nsing-Community/N32G032-SDK)               |
-| `n32g031`     | Cortex-M0          | [N32G031-SDK](https://github.com/Nsing-Community/N32G031-SDK)               |
-| `n32g030`     | Cortex-M0          | [N32G030-SDK](https://github.com/Nsing-Community/N32G030-SDK)               |
-| `n32g003`     | Cortex-M0          | [N32G003-SDK](https://github.com/Nsing-Community/N32G003-SDK)               |
-| `n32l43x`     | Cortex-M4          | [N32L43x-SDK](https://github.com/Nsing-Community/N32L43x-SDK)               |
-| `n32l40x`     | Cortex-M4          | [N32L40x-SDK](https://github.com/Nsing-Community/N32L40x-SDK)               |
-| `n32h49x`     | Cortex-M4          | [N32H49x-SDK](https://github.com/Nsing-Community/N32H49x-SDK)               |
-| `n32h7xx`     | Cortex-M4 + M7     | [N32H7xx-SDK](https://github.com/Nsing-Community/N32H7xx-SDK)               |
-| `n32a455`     | Cortex-M4          | [N32A455-SDK](https://github.com/Nsing-Community/N32A455-SDK)               |
-| `n32a052`     | Cortex-M0          | [N32A052-SDK](https://github.com/Nsing-Community/N32A052-SDK)               |
-| `n32a003`     | Cortex-M0          | [N32A003-SDK](https://github.com/Nsing-Community/N32A003-SDK)               |
-| `n32wb452`    | Cortex-M4          | [N32WB452-SDK](https://github.com/Nsing-Community/N32WB452-SDK)             |
-| `n32wb03x`    | Cortex-M0          | [N32WB03x-SDK](https://github.com/Nsing-Community/N32WB03x-SDK)             |
-
-Two entries need care:
-
-* **`n32h7xx` is dual-core** (Cortex-M4 plus Cortex-M7) with per-core startup files, linker
-  scripts and algorithm libraries. The single flat series directory used everywhere else cannot
-  express that; it needs a per-core split.
-* **[`N32M016FocRL`](https://github.com/Nsing-Community/N32M016FocRL) is not a series.** Its
-  `firmware/` contains `n32g033_std_periph_driver` and the N32G033 device headers — it is
-  N32G033 silicon aimed at FOC motor control. Mirror it as a variant of `n32g033`, using
-  `--device-prefix n32g033`, rather than as a series of its own.
-
-## Binary blobs
+# Binary blobs
 
 No precompiled libraries are committed to this repository. Zephyr's
 [binary blobs policy](https://docs.zephyrproject.org/latest/contribute/bin_blobs.html) requires
 blobs to be declared in the `blobs:` section of `zephyr/module.yml` and fetched with
-`west blobs fetch` into `zephyr/blobs/`, which is git-ignored.
+`west blobs fetch` into `zephyr/blobs/`, which is git-ignored; `hal_stm32` is a working example
+of that layout. Nothing in the module currently references a blob, so no blob is declared. A
+series that needs the TSC touch-sensing algorithm will have to add a `blobs:` entry with its
+URL, SHA256 and license path.
 
-Nothing in the module currently references a blob, so no blob is declared. A series that needs
-the TSC touch-sensing algorithm will have to add a `blobs:` entry with its URL, SHA256 and
-license path.
+# License
 
-## License
+BSD 3-Clause; see [LICENSE](LICENSE). The repository is compliant with
+[REUSE](https://reuse.software/) 3.3 — `REUSE.toml` and `LICENSES/` carry the machine-readable
+form, and `reuse lint` is expected to stay clean.
 
-This repository is distributed under the BSD 3-Clause license; see [LICENSE](LICENSE).
+The driver sources under each series directory are vendored verbatim from the upstream SDK and
+keep their own headers, Copyright (c) 2019, 2025 Nations Technologies Inc. They are **declared**
+as BSD-3-Clause in `REUSE.toml` rather than edited, because editing them would break the
+byte-for-byte mirror that `scripts/sync_series.py` maintains.
 
-The vendored driver sources under each series directory carry their own BSD 3-Clause headers,
-Copyright (c) 2019, 2025 Nations Technologies Inc.
+Note that upstream describes its own terms as "BSD-style" rather than naming a SPDX identifier,
+and the header text differs in drafting from the standard BSD-3-Clause — the binary-redistribution
+clause is not enumerated, and the disclaimer carries an extra "AND NON-INFRINGEMENT". The exact
+text is the header of each file. Worth putting to Nations if this module is ever challenged on it.

@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Nsing Technologies Inc.
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# The Nsing SDKs ship CRLF, but this module stores everything with LF so that the
+# working tree is byte-identical to the committed blobs on every platform and
+# `scripts/sync_series.py --check` stays meaningful.
+#
+# Without this, correct line endings depend on everyone having core.autocrlf set
+# the same way -- which is exactly how four files ended up CRLF once already.
+* text=auto eol=lf

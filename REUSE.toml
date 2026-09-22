@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: 2026 Nsing Technologies Inc.
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# REUSE configuration for the hal_nsing module.
+#
+# The driver sources under each series directory are vendored verbatim from the
+# upstream Nations SDK. Rewriting them to carry SPDX headers would break the
+# byte-for-byte mirror that scripts/sync_series.py depends on, so their
+# licensing is declared here instead of in the files.
+#
+# Files that this project writes itself carry their own SPDX headers and are
+# not listed below.
+#
+# https://reuse.software/spec-3.3/#reusetoml
+
+version = 1
+
+# Vendored Nations driver sources.
+#
+# Every one of these files already carries "Copyright (c) 2019, 2025 Nations
+# Technologies Inc." in its header; what is missing is only the license
+# identifier. Hence aggregate, which merges with the file's own copyright
+# rather than replacing it.
+#
+# A new series needs its own entry here -- see "Adding a series" in README.md.
+[[annotations]]
+path = [
+    "n32g45x/CMSIS/**",
+    "n32g45x/n32g45x_std_periph_driver/**",
+]
+precedence = "aggregate"
+SPDX-License-Identifier = "BSD-3-Clause"
+
+# The two READMEs. Declared here rather than as an HTML comment at the top of
+# user-facing documentation, where it would be noise.
+[[annotations]]
+path = [
+    "README.md",
+    "n32g45x/README.md",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Nsing Technologies Inc."
+SPDX-License-Identifier = "BSD-3-Clause"
