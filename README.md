@@ -1,7 +1,7 @@
 # Introduction
 
 The **hal_nsing** is a set of standard firmware libraries and ARM CMSIS configurations for
-Nsing N32 MCUs. The HAL is organized following the directory structure detailed below.
+NSING N32 MCUs. The HAL is organized following the directory structure detailed below.
 
 ## Directory Structure
 
@@ -65,7 +65,7 @@ which is why a series directory **must** be named exactly after the lowercase So
 
 | Directory  | Core       | Upstream SDK                                                          |
 | ---------- | ---------- | --------------------------------------------------------------------- |
-| `n32g45x/` | Cortex-M4  | [`Nsing-Community/N32G45x-SDK`](https://github.com/Nsing-Community/N32G45x-SDK) |
+| `n32g45x/` | Cortex-M4  | [`NSING-Community/N32G45x-SDK`](https://github.com/NSING-Community/N32G45x-SDK) |
 
 Further series are added as sibling directories, named after the lowercase `CONFIG_SOC_SERIES` —
 see [Adding a series](#adding-a-series).
@@ -106,7 +106,7 @@ see [Adding a series](#adding-a-series).
 1. Clone its SDK and mirror it:
 
    ```sh
-   git clone https://github.com/Nsing-Community/N32G43x-SDK
+   git clone https://github.com/NSING-Community/N32G43x-SDK
    python scripts/sync_series.py n32g43x N32G43x-SDK/firmware
    ```
 
