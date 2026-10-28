@@ -22,7 +22,7 @@ version = 1
 # identifier. Hence aggregate, which merges with the file's own copyright
 # rather than replacing it.
 #
-# A new series needs its own entry here -- see "Adding a series" in README.md.
+# A new series needs its own entry here -- see "Adding a series" in README.rst.
 [[annotations]]
 path = [
     "n32g45x/CMSIS/**",
@@ -35,7 +35,7 @@ SPDX-License-Identifier = "BSD-3-Clause"
 # user-facing documentation, where it would be noise.
 [[annotations]]
 path = [
-    "README.md",
+    "README.rst",
     "n32g45x/README.md",
 ]
 precedence = "aggregate"
