@@ -68,11 +68,13 @@ which is why a series directory **must** be named exactly after the lowercase So
 Supported series
 ----------------
 
-+--------------+-----------+---------------------------------------------------------------------------------+
-| Directory    | Core      | Upstream SDK                                                                    |
-+==============+===========+=================================================================================+
-| ``n32g45x/`` | Cortex-M4 | `NSING-Community/N32G45x-SDK <https://github.com/NSING-Community/N32G45x-SDK>`_ |
-+--------------+-----------+---------------------------------------------------------------------------------+
++--------------+--------------+---------------------------------------------------------------------------------+
+| Directory    | Core         | Upstream SDK                                                                    |
++==============+==============+=================================================================================+
+| ``n32g45x/`` | Cortex-M4    | `NSING-Community/N32G45x-SDK <https://github.com/NSING-Community/N32G45x-SDK>`_ |
++--------------+--------------+---------------------------------------------------------------------------------+
+| ``n32h78x/`` | Cortex-M7/M4 | `NSING-Community/N32H7xx-SDK <https://github.com/NSING-Community/N32H7xx-SDK>`_ |
++--------------+--------------+---------------------------------------------------------------------------------+
 
 Further series are added as sibling directories, named after the lowercase ``CONFIG_SOC_SERIES`` —
 see `Adding a series`_.

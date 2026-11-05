@@ -17,8 +17,8 @@ version = 1
 
 # Vendored Nations driver sources.
 #
-# Every one of these files already carries "Copyright (c) 2019, 2025 Nations
-# Technologies Inc." in its header; what is missing is only the license
+# The n32g45x files already carry "Copyright (c) 2019, 2025 Nations
+# Technologies Inc." in their header; what is missing is only the license
 # identifier. Hence aggregate, which merges with the file's own copyright
 # rather than replacing it.
 #
@@ -31,12 +31,22 @@ path = [
 precedence = "aggregate"
 SPDX-License-Identifier = "BSD-3-Clause"
 
-# The two READMEs. Declared here rather than as an HTML comment at the top of
-# user-facing documentation, where it would be noise.
+# Vendored N32H7xx driver sources. These files are dated 2025.
+[[annotations]]
+path = [
+    "n32h78x/CMSIS/**",
+    "n32h78x/n32h7xx_std_periph_driver/**",
+]
+precedence = "aggregate"
+SPDX-License-Identifier = "BSD-3-Clause"
+
+# The series READMEs. Declared here rather than as an HTML comment at the top
+# of user-facing documentation, where it would be noise.
 [[annotations]]
 path = [
     "README.rst",
     "n32g45x/README.md",
+    "n32h78x/README.md",
 ]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Nsing Technologies Inc."
